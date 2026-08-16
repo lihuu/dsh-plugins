@@ -1,0 +1,3 @@
+[submodule "plugins/dsh-lazy-skill"]
+	path = plugins/dsh-lazy-skill
+	url = https://github.com/lihuu/dsh-lazy-skill.git

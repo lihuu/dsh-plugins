@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+**/node_modules/
+**/lib/index.js
+**/lib/index.d.ts
+*.tsbuildinfo
