@@ -21,6 +21,9 @@
   /** When true the pick inserts the absolute path; else the workspace-relative path. */
   var INSERT_ABSOLUTE = true
 
+  /** Prefix marker inserted before the path so the model treats it as a file to read. */
+  var READ_MARKER = 'read:'
+
   window.__ModuleLoader__.load({
     id: PLUGIN_ID,
     factory: function (require) {
@@ -110,8 +113,10 @@
             onPick: function (pick) {
               var hint = pick && pick.candidate && pick.candidate.hint
               if (!hint) return undefined
-              // Insert the file path as plain text (trailing space closes the token).
-              return { text: hint + ' ' }
+              // Insert a read: marker + the file path as plain text (trailing
+              // space closes the token). The marker tells the model this text
+              // is a file reference it should read.
+              return { text: READ_MARKER + hint + ' ' }
             },
           }
 
