@@ -1,12 +1,78 @@
 # dsh-plugins
 
+Personal unified plugin collection for [DeepSeek Harness](https://github.com/deepseek-harness). All self-authored plugins live here in one place, so a fresh machine can install everything with a single command.
+
+[[中文说明见下](#dsh-plugins-中文)](README.md#dsh-plugins-中文)
+
+## Plugins
+
+| Plugin | Location | Kind | Purpose |
+| --- | --- | --- | --- |
+| `dsh-file-ref` | `plugins/dsh-file-ref` (repo subdirectory) | Web plugin (browser + host) | Composer `@file` — locate a workspace file and insert its full absolute path |
+| `dsh-lazy-skill` | `plugins/dsh-lazy-skill` (submodule → [lihuu/dsh-lazy-skill](https://github.com/lihuu/dsh-lazy-skill)) | Host plugin | Lazily load skill bundles |
+
+## Install (on a new machine)
+
+```sh
+# 1. Clone (with submodules)
+git clone --recurse-submodules https://github.com/lihuu/dsh-plugins.git
+cd dsh-plugins
+
+# 2. Install everything to the local DSH
+./install.sh
+```
+
+`install.sh`:
+- symlinks each plugin into `$DSH_HOME/plugins/<name>`
+- ensures the matching rows exist in `$DSH_HOME/cordis.patch.yml` (idempotent — no duplicates)
+- source edits under the symlink take effect immediately
+
+After installing, restart dsh-web for the host halves to take effect:
+
+```sh
+launchctl kickstart -k gui/501/com.lihu.dsh-web
+```
+
+Browser-side changes appear on page refresh (or via HMR).
+
+## Adding a plugin
+
+1. Create a directory under `plugins/` with the source
+2. Add one line to the `link_plugin` list in `install.sh`
+3. Add a matching row to the `rows` table in `install.sh`
+4. Commit
+
+## Layout
+
+```
+dsh-plugins/
+├── install.sh                    one-shot install into ~/.dsh
+├── plugins/
+│   ├── dsh-file-ref/             file-ref source (managed directly here)
+│   └── dsh-lazy-skill/           submodule (own repository, pointer)
+└── README.md
+```
+
+## Per-plugin docs
+
+- [`plugins/dsh-file-ref/README.md`](plugins/dsh-file-ref/README.md) — `@file` workspace file reference
+- lazy-skill docs live in its own repository
+
+## License
+
+MIT
+
+---
+
+# dsh-plugins (中文)
+
 个人 DeepSeek Harness 插件合集统一管理仓库。所有自研插件集中存放,换机器一条命令装齐。
 
 ## 包含的插件
 
 | 插件 | 所在 | 类型 | 作用 |
 | --- | --- | --- | --- |
-| `dsh-file-ref` | `plugins/dsh-file-ref`(本仓库子目录) | Web 插件(browser + host) | 作曲家输入 `@` 快速定位工作区文件并插入完整绝对路径 |
+| `dsh-file-ref` | `plugins/dsh-file-ref`(本仓库子目录) | Web 插件(browser + host) | 作曲家输入 `@file` 快速定位工作区文件并插入完整绝对路径 |
 | `dsh-lazy-skill` | `plugins/dsh-lazy-skill`(submodule→[lihuu/dsh-lazy-skill](https://github.com/lihuu/dsh-lazy-skill)) | Host 插件 | 懒加载 skill 包 |
 
 ## 安装(换机器)
@@ -21,6 +87,7 @@ cd dsh-plugins
 ```
 
 `install.sh` 会:
+
 - 把每个插件符号链接到 `$DSH_HOME/plugins/<name>`
 - 保证 `$DSH_HOME/cordis.patch.yml` 里有对应挂载行(幂等,不重复)
 - 插件源码的改动在符号链接下即时生效
@@ -36,8 +103,9 @@ launchctl kickstart -k gui/501/com.lihu.dsh-web
 ## 新增插件
 
 1. 在 `plugins/` 下新建目录,写好源码
-2. 在 `install.sh` 的 `link_plugin` 列表和 python `rows` 表里各加一行
-3. 提交
+2. 在 `install.sh` 的 `link_plugin` 列表里加一行
+3. 在 `install.sh` 的 python `rows` 表里加对应行
+4. 提交
 
 ## 结构
 
@@ -54,3 +122,7 @@ dsh-plugins/
 
 - [`plugins/dsh-file-ref/README.md`](plugins/dsh-file-ref/README.md) — `@file` 工作区文件引用
 - lazy-skill 独立仓库说明见其自己的 README
+
+## License
+
+MIT
