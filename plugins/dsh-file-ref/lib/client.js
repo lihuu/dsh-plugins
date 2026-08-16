@@ -21,9 +21,6 @@
   /** When true the pick inserts the absolute path; else the workspace-relative path. */
   var INSERT_ABSOLUTE = true
 
-  /** Prefix marker inserted before the path so the model treats it as a file to read. */
-  var READ_MARKER = 'read:'
-
   window.__ModuleLoader__.load({
     id: PLUGIN_ID,
     factory: function (require) {
@@ -110,13 +107,22 @@
                 return toRows(cands, INSERT_ABSOLUTE)
               })
             },
+            // Hot name roll for plain-text reference decoration: 'read' in the
+            // lexicon means a draft token `@read` (as inserted on pick) renders
+            // highlighted in the composer — the same scan-derived decoration the
+            // skill/subagent sources use. 'read' is a fixed marker; it never
+            // waits on the file search and is always settled.
+            lexicon: function () {
+              return ['read']
+            },
             onPick: function (pick) {
               var hint = pick && pick.candidate && pick.candidate.hint
               if (!hint) return undefined
-              // Insert a read: marker + the file path as plain text (trailing
-              // space closes the token). The marker tells the model this text
-              // is a file reference it should read.
-              return { text: READ_MARKER + hint + ' ' }
+              // Insert '@read:' + the file path as plain text (trailing space
+              // closes the token). The '@read' marker tells the model this text
+              // is a file reference it should read, and the lexicon lets the
+              // composer highlight the leading '@read' token.
+              return { text: '@read:' + hint + ' ' }
             },
           }
 
