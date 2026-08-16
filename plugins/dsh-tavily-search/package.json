@@ -1,0 +1,36 @@
+{
+  "name": "dsh-tavily-search",
+  "version": "0.1.0",
+  "description": "Tavily-backed WebSearchProvider for DeepSeek Harness: registers a Tavily search provider into ctx.web so the standard web_search tool can use Tavily — zero main-repo changes.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "lib",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "web",
+    "tavily",
+    "search",
+    "plugin"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}

@@ -12,6 +12,7 @@
 | --- | --- | --- | --- |
 | `dsh-file-ref` | `plugins/dsh-file-ref`(本仓库子目录) | Web 插件(browser + host) | 作曲家输入 `@file` 快速定位工作区文件并插入完整绝对路径 |
 | `dsh-lazy-skill` | `plugins/dsh-lazy-skill`(submodule→[lihuu/dsh-lazy-skill](https://github.com/lihuu/dsh-lazy-skill)) | Host 插件 | 懒加载 skill 包 |
+| `dsh-tavily-search` | `plugins/dsh-tavily-search`(本仓库子目录) | Host 插件 | 基于 Tavily 的 `WebSearchProvider`,注册进 `ctx.web`,让 `web_search` 工具走 Tavily |
 
 ## 安装(换机器)
 

@@ -12,6 +12,7 @@ Personal unified plugin collection for [DeepSeek Harness](https://github.com/dee
 | --- | --- | --- | --- |
 | `dsh-file-ref` | `plugins/dsh-file-ref` (repo subdirectory) | Web plugin (browser + host) | Composer `@file` — locate a workspace file and insert its full absolute path |
 | `dsh-lazy-skill` | `plugins/dsh-lazy-skill` (submodule → [lihuu/dsh-lazy-skill](https://github.com/lihuu/dsh-lazy-skill)) | Host plugin | Lazily load skill bundles |
+| `dsh-tavily-search` | `plugins/dsh-tavily-search` (repo subdirectory) | Host plugin | Tavily-backed `WebSearchProvider` for `ctx.web` — makes the `web_search` tool use Tavily |
 
 ## Install (on a new machine)
 
