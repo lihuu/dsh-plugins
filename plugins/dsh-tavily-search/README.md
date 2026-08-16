@@ -56,7 +56,7 @@ The plugin reads the key from its `config.apiKey`, falling back to the `TAVILY_A
         apiKey: tvly-xxxxxxxxxxxxxxxx
 ```
 
-**Option B — environment variable.** Set `TAVILY_API_KEY` in the environment the harness process runs under. For a launchd-managed service, add it to `$DSH_HOME/launchd/env.sh` (launchd does **not** read your shell's `~/.zshrc`):
+**Option B — environment variable.** Set `TAVILY_API_KEY` in the environment the harness process runs under (your shell profile, a systemd/launchd unit, a process manager, etc.):
 
 ```sh
 export TAVILY_API_KEY="tvly-xxxxxxxxxxxxxxxx"
@@ -68,17 +68,13 @@ Get a key at [tavily.com](https://tavily.com). Keys start with `tvly-`.
 
 Once configured, the model's `web_search` tool automatically routes through Tavily — no code changes. Ask the model to search the web and it will return Tavily results (an optional answer plus a list of source URLs).
 
-To verify it works, restart the harness and ask the model to search something:
-
-```sh
-launchctl kickstart -k gui/$(id -u)/com.lihu.dsh-web
-```
+To verify it works, restart the harness (however you run it) and ask the model to search something.
 
 ## Build
 
 ```sh
-# create a local node_modules link first (build-only; not committed)
-ln -s $DSH_HOME/profiles/node_modules node_modules
+# link your harness's node_modules so the peer dependencies resolve
+ln -s "$DSH_HOME/profiles/node_modules" node_modules
 tsc -p tsconfig.json
 ```
 

@@ -56,7 +56,7 @@ base bundle 默认把 `searchProvider` 固定为 `deepseek-official`。在 `$DSH
         apiKey: tvly-xxxxxxxxxxxxxxxx
 ```
 
-**方式 B——环境变量。** 在 harness 进程运行的环境里设置 `TAVILY_API_KEY`。如果是 launchd 托管的服务,加到 `$DSH_HOME/launchd/env.sh`(launchd **不会**读你 shell 的 `~/.zshrc`):
+**方式 B——环境变量。** 在 harness 进程运行的环境里设置 `TAVILY_API_KEY`(你的 shell 配置文件、systemd/launchd 单元、进程管理器等):
 
 ```sh
 export TAVILY_API_KEY="tvly-xxxxxxxxxxxxxxxx"
@@ -68,17 +68,13 @@ export TAVILY_API_KEY="tvly-xxxxxxxxxxxxxxxx"
 
 配置好后,模型的 `web_search` 工具会自动走 Tavily,无需改代码。让模型搜索网页,它就会返回 Tavily 结果(可选答案 + 来源 URL 列表)。
 
-验证是否生效:重启 harness,让模型搜个东西:
-
-```sh
-launchctl kickstart -k gui/$(id -u)/com.lihu.dsh-web
-```
+验证是否生效:重启 harness(无论你怎么运行它),让模型搜个东西。
 
 ## 构建
 
 ```sh
-# 先建本地 node_modules 软链(仅构建用,不提交)
-ln -s $DSH_HOME/profiles/node_modules node_modules
+# 链接你 harness 的 node_modules,让 peer 依赖可解析
+ln -s "$DSH_HOME/profiles/node_modules" node_modules
 tsc -p tsconfig.json
 ```
 
