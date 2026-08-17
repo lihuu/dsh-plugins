@@ -1,0 +1,23 @@
+{
+  "name": "dsh-client-ui-terminal",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "xterm": "^5.3.0"
+  }
+}
