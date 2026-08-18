@@ -37,6 +37,7 @@ link_plugin () {
 link_plugin dsh-file-ref
 link_plugin dsh-lazy-skill
 link_plugin dsh-tavily-search
+link_plugin dsh-about
 
 # ---- ensure patch rows (idempotent, YAML-indent-safe) ----
 DSH_PLUGINS_HOME="$DSH_HOME" PLUGINS_DIR="$PLUGINS_DIR" PATCH_FILE="$PATCH_FILE" python3 <<'PY'
@@ -61,6 +62,10 @@ rows = [
     ("dsh-tavily-search", [
         "  - id: dsh-tavily-search",
         "    name: '@local/dsh-tavily-search'",
+    ]),
+    ("dsh-about", [
+        "  - id: dsh-about",
+        "    name: '@local/dsh-about'",
     ]),
 ]
 
