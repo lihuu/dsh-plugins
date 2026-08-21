@@ -41,7 +41,8 @@ export function apply(ctx: ClientContext): void {
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section',
     id: 'usage',
-    order: 100,
+    // Between Models (10) and About (30): the page sits above the About tab.
+    order: 20,
     label: () => t('nav'),
     locale: NS,
   }, UsageSection))

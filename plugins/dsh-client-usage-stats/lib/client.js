@@ -122,12 +122,12 @@ window.__ModuleLoader__.load({
 				margin: 0,
 				fontSize: 18,
 				fontWeight: 600,
-				color: "var(--dsw-text, #e8e8e8)"
+				color: "var(--dsw-alias-label-primary)"
 			},
 			description: {
 				margin: 0,
 				fontSize: 13,
-				color: "var(--dsw-text-muted, #9a9a9a)"
+				color: "var(--dsw-alias-label-tertiary)"
 			},
 			totalCard: {
 				display: "flex",
@@ -135,16 +135,16 @@ window.__ModuleLoader__.load({
 				gap: 4,
 				padding: "16px 20px",
 				borderRadius: 10,
-				backgroundColor: "var(--dsw-surface-raised, rgba(255,255,255,0.06))"
+				backgroundColor: "var(--dsw-alias-bg-module-platform)"
 			},
 			totalValue: {
 				fontSize: 32,
 				fontWeight: 700,
-				color: "var(--dsw-accent, #4d9fff)"
+				color: "var(--dsw-alias-brand-primary)"
 			},
 			totalLabel: {
 				fontSize: 13,
-				color: "var(--dsw-text-muted, #9a9a9a)"
+				color: "var(--dsw-alias-label-tertiary)"
 			},
 			rows: {
 				display: "flex",
@@ -157,21 +157,21 @@ window.__ModuleLoader__.load({
 				alignItems: "center",
 				fontSize: 14
 			},
-			rowLabel: { color: "var(--dsw-text, #e8e8e8)" },
+			rowLabel: { color: "var(--dsw-alias-label-secondary)" },
 			rowValue: {
-				color: "var(--dsw-text-strong, #ffffff)",
+				color: "var(--dsw-alias-label-primary)",
 				fontWeight: 600,
 				fontVariantNumeric: "tabular-nums"
 			},
 			sessions: {
 				margin: 0,
 				fontSize: 13,
-				color: "var(--dsw-text-muted, #9a9a9a)"
+				color: "var(--dsw-alias-label-tertiary)"
 			},
 			empty: {
 				margin: 0,
 				fontSize: 14,
-				color: "var(--dsw-text-muted, #9a9a9a)"
+				color: "var(--dsw-alias-label-tertiary)"
 			}
 		};
 		//#endregion
@@ -229,7 +229,7 @@ window.__ModuleLoader__.load({
 			ctx.slots.inject("settings.section", () => ctx.slots.register({
 				name: "settings.section",
 				id: "usage",
-				order: 100,
+				order: 20,
 				label: () => t("nav"),
 				locale: NS
 			}, UsageSection));
