@@ -13,6 +13,7 @@
 | `dsh-file-ref` | `plugins/dsh-file-ref`(本仓库子目录) | Web 插件(browser + host) | 作曲家输入 `@file` 快速定位工作区文件并插入完整绝对路径 |
 | `dsh-lazy-skill` | `plugins/dsh-lazy-skill`(submodule→[lihuu/dsh-lazy-skill](https://github.com/lihuu/dsh-lazy-skill)) | Host 插件 | 懒加载 skill 包 |
 | `dsh-tavily-search` | `plugins/dsh-tavily-search`(本仓库子目录) | Host 插件 | 基于 Tavily 的 `WebSearchProvider`,注册进 `ctx.web`,让 `web_search` 工具走 Tavily |
+| `llm-ollama-cloud` | `plugins/llm-ollama-cloud`(本仓库子目录) | Host 插件(LLM 提供方) | 注册 `ollama-cloud-direct` 路由,对接 Ollama 云端 OpenAI 兼容接口;依赖仅 `dsh-llm`+`cordis`+`eventsource-parser` |
 
 ## 安装(换机器)
 
@@ -29,7 +30,19 @@ cd dsh-plugins
 
 - 把每个插件符号链接到 `$DSH_HOME/plugins/<name>`
 - 保证 `$DSH_HOME/cordis.patch.yml` 里有对应挂载行(幂等,不重复)
+- 为每个插件补齐**运行期解析所需的两个软链**(见下)
 - 插件源码的改动在符号链接下即时生效
+
+### 运行期解析软链(重要)
+
+dsh 的 loader 通过 `~/.dsh/profiles/node_modules/@local/<name>` 解析 `@local/<name>`;插件自身 import 的 `@deepseek-ai/*`、`eventsource-parser` 则通过插件目录内的 `node_modules` 软链解析——它指向 `~/.dsh/profiles/node_modules`,即**运行中的 dsh 安装**自己维护的 SDK 依赖闭包(每次启动自动与当前 dsh 版本同步,不需要 npm install)。这两个软链都是机器相关的、已被 `.gitignore` 忽略,由 `install.sh` 在每台机器上创建:
+
+```
+~/.dsh/profiles/node_modules/@local/<name>  → ~/.dsh/plugins/<name>
+~/.dsh/plugins/<name>/node_modules          → ~/.dsh/profiles/node_modules
+```
+
+所以"换机器一条命令装齐"是完整的:clone → `./install.sh` → 重启,依赖自动可用。
 
 装完后重启 dsh-web(host 半生效):
 
@@ -45,6 +58,8 @@ launchctl kickstart -k gui/501/com.lihu.dsh-web
 2. 在 `install.sh` 的 `link_plugin` 列表里加一行
 3. 在 `install.sh` 的 python `rows` 表里加对应行
 4. 提交
+
+注意:可加载产物 `dist/index.js` 会随仓库提交(新机器免构建工具链)。改过 `src/` 后务必先 `npm run build` 再提交,保证产物与源码同步。
 
 ## 结构
 

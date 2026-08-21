@@ -1,10 +1,19 @@
 #!/bin/bash
 # dsh-plugins — one-shot installer for every plugin in this monorepo.
 #
-# Symlinks each plugin under ./plugins into $DSH_HOME/plugins and guarantees
-# the matching rows live inside the first '- insert:' block of
-# $DSH_HOME/cordis.patch.yml (idempotent). After running, restart dsh-web for
-# host-half plugins to take effect.
+# For each plugin under ./plugins this script:
+#   1. symlinks it into $DSH_HOME/plugins/<name> (source edits take effect
+#      immediately through the link);
+#   2. wires the two runtime resolution links every @local plugin needs:
+#        - $DSH_HOME/profiles/node_modules/@local/<name>  → the @local scope the
+#          dsh loader resolves `@local/<name>` through;
+#        - <plugin>/node_modules → $DSH_HOME/profiles/node_modules, the module
+#          fallback the running dsh heals from its own SDK closure, so the
+#          plugin's imports of @deepseek-ai/* and eventsource-parser resolve
+#          without any npm install. Both links are machine-local and gitignored.
+#   3. guarantees the matching rows live inside the first '- insert:' block of
+#      $DSH_HOME/cordis.patch.yml (idempotent).
+# After running, restart dsh-web for host-half plugins to take effect.
 #
 # Usage: ./install.sh
 
@@ -13,6 +22,7 @@ set -eu
 DSH_HOME="${DSH_HOME:-$HOME/.dsh}"
 PLUGINS_DIR="$DSH_HOME/plugins"
 PATCH_FILE="$DSH_HOME/cordis.patch.yml"
+PROFILE_MODULES="$DSH_HOME/profiles/node_modules"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p "$PLUGINS_DIR"
@@ -34,10 +44,30 @@ link_plugin () {
   echo "linked: $name"
 }
 
+# ---- wire runtime resolution links (loader scope + dependency fallback) ----
+wire_runtime () {
+  local name="$1"
+  local src="$HERE/plugins/$name"
+  if [ ! -e "$src" ]; then
+    return
+  fi
+  mkdir -p "$PROFILE_MODULES/@local"
+  ln -sfn "$PLUGINS_DIR/$name" "$PROFILE_MODULES/@local/$name"
+  ln -sfn "$PROFILE_MODULES" "$src/node_modules"
+  echo "wired: $name (loader scope + node_modules fallback)"
+}
+
 link_plugin dsh-file-ref
 link_plugin dsh-lazy-skill
 link_plugin dsh-tavily-search
 link_plugin dsh-about
+link_plugin llm-ollama-cloud
+
+wire_runtime dsh-file-ref
+wire_runtime dsh-lazy-skill
+wire_runtime dsh-tavily-search
+wire_runtime dsh-about
+wire_runtime llm-ollama-cloud
 
 # ---- ensure patch rows (idempotent, YAML-indent-safe) ----
 DSH_PLUGINS_HOME="$DSH_HOME" PLUGINS_DIR="$PLUGINS_DIR" PATCH_FILE="$PATCH_FILE" python3 <<'PY'
@@ -66,6 +96,23 @@ rows = [
     ("dsh-about", [
         "  - id: dsh-about",
         "    name: '@local/dsh-about'",
+    ]),
+    ("llm-ollama-cloud", [
+        "  - id: llm-ollama-cloud",
+        "    name: '@local/llm-ollama-cloud'",
+        "    config:",
+        "      apiKeyEnv: OLLAMA_CLOUD_API_KEY",
+        "      baseURL: https://ollama.com/v1",
+        "      models:",
+        "        - id: deepseek-v4-flash",
+        "          name: DeepSeek-V4-Flash",
+        "          contextWindow: 800000",
+        "        - id: deepseek-v4-pro",
+        "          name: DeepSeek-V4-Pro",
+        "          contextWindow: 800000",
+        "        - id: glm-5.2",
+        "          name: GLM-5.2",
+        "          contextWindow: 800000",
     ]),
 ]
 

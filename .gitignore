@@ -1,6 +1,16 @@
 .DS_Store
 node_modules/
-**/node_modules/
-**/lib/index.js
-**/lib/index.d.ts
+# No trailing slash: matches the per-plugin node_modules symlink to the
+# profile module fallback (created by install.sh, machine-specific) as well
+# as real node_modules directories.
+**/node_modules
+# Type declarations and lib-side outputs are never committed. dsh-file-ref's
+# lib/client.js was tracked before this rule and stays tracked (ignore rules
+# never untrack existing files).
+**/lib/
 *.tsbuildinfo
+# Bundle outputs: only the loadable single-file bundle is committed, so a fresh
+# machine needs no build toolchain (clone -> install.sh -> restart). Sourcemaps
+# and any other dist contents stay out.
+**/dist/*
+!**/dist/index.js

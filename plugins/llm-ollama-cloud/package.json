@@ -1,0 +1,41 @@
+{
+  "name": "llm-ollama-cloud",
+  "version": "0.1.0",
+  "description": "Ollama cloud chat-completions adapter (LLM provider plugin) for DeepSeek Harness — installable @local plugin, single-file bundle, one runtime peer (@deepseek-ai/dsh-llm)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "lib",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node build.mjs",
+    "build:types": "tsc -p tsconfig.json",
+    "build:bundle": "node build.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-llm": "*"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "llm",
+    "ollama"
+  ]
+}
