@@ -6,8 +6,11 @@ node_modules/
 **/node_modules
 # Type declarations and lib-side outputs are never committed. dsh-file-ref's
 # lib/client.js was tracked before this rule and stays tracked (ignore rules
-# never untrack existing files).
-**/lib/
+# never untrack existing files). Client plugins DO commit their single-file
+# browser bundle (lib/client.js) — the web GUI serves it from disk, so a fresh
+# machine needs no build toolchain.
+**/lib/*
+!**/lib/client.js
 *.tsbuildinfo
 # Bundle outputs: only the loadable single-file bundle is committed, so a fresh
 # machine needs no build toolchain (clone -> install.sh -> restart). Sourcemaps

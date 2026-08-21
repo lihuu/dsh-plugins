@@ -97,12 +97,14 @@ link_plugin dsh-lazy-skill
 link_plugin dsh-tavily-search
 link_plugin dsh-about
 link_plugin llm-ollama-cloud
+link_plugin dsh-client-usage-stats
 
 wire_runtime dsh-file-ref
 wire_runtime dsh-lazy-skill
 wire_runtime dsh-tavily-search
 wire_runtime dsh-about
 wire_runtime llm-ollama-cloud
+wire_runtime dsh-client-usage-stats
 
 # ---- ensure patch rows (idempotent, YAML-indent-safe) ----
 DSH_PLUGINS_HOME="$DSH_HOME" PLUGINS_DIR="$PLUGINS_DIR" PATCH_FILE="$PATCH_FILE" python3 <<'PY'
@@ -149,6 +151,10 @@ rows = [
         "          name: GLM-5.2",
         "          contextWindow: 800000",
     ]),
+    ("dsh-client-usage-stats", [
+        "  - id: dsh-client-usage-stats",
+        "    name: '@local/dsh-client-usage-stats'",
+    ]),
 ]
 
 text = ""
@@ -181,8 +187,11 @@ for row_id, body in rows:
         print(f"patch added (new block): {row_id}")
         continue
 
-    # insert into the first top-level '- insert:' block, before its terminator.
-    # Splice after the header line: find index of the '- insert:' regex.
+    # insert into the first top-level '- insert:' block, at its END, matching
+    # the indent of the block's existing entries. Inserting at the head with a
+    # hardcoded 2-space indent corrupted files whose entries used a different
+    # indent (bad indentation of a sequence entry), so the block's own indent
+    # is detected and reused.
     lines = text.splitlines()
     insert_idx = None
     for i, line in enumerate(lines):
@@ -192,8 +201,29 @@ for row_id, body in rows:
     if insert_idx is None:
         text += f"\n- insert:\n{row_block}\n"
     else:
-        # insert after the header line
-        lines[insert_idx + 1:insert_idx + 1] = row_block.splitlines()
+        # entry indent = leading whitespace of the first '- ' line after the header
+        indent = "  "
+        for line in lines[insert_idx + 1:]:
+            m = re.match(r"^([ \t]*)- ", line)
+            if m:
+                indent = m.group(1)
+                break
+        # re-indent the row block from its 2-space baseline to the detected indent
+        def reindent(block: str, base: str) -> list[str]:
+            out = []
+            for line in block.splitlines():
+                stripped = line.lstrip(" ")
+                leading = len(line) - len(stripped)
+                out.append(" " * (len(base) + max(0, leading - 2)) + stripped)
+            return out
+        # block end = last line indented deeper than the header (or the header itself)
+        block_end = insert_idx
+        for j in range(insert_idx + 1, len(lines)):
+            if lines[j].strip() == "" or lines[j][0] in " \t":
+                block_end = j
+            else:
+                break
+        lines[block_end + 1:block_end + 1] = reindent(row_block, indent)
         text = "\n".join(lines)
     print(f"patch added: {row_id}")
 
