@@ -1,0 +1,36 @@
+{
+  "name": "dsh-task-notify",
+  "version": "0.1.0",
+  "description": "Browser notification when a DeepSeek Harness web task finishes running. Pure browser client plugin: subscribes to the sessions list and fires a Chrome Notification on each running→idle transition. Zero main-repo changes — installs as an @local plugin.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "web",
+    "notification",
+    "plugin"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -98,6 +98,7 @@ link_plugin dsh-tavily-search
 link_plugin dsh-about
 link_plugin llm-ollama-cloud
 link_plugin dsh-client-usage-stats
+link_plugin dsh-task-notify
 
 wire_runtime dsh-file-ref
 wire_runtime dsh-lazy-skill
@@ -105,6 +106,7 @@ wire_runtime dsh-tavily-search
 wire_runtime dsh-about
 wire_runtime llm-ollama-cloud
 wire_runtime dsh-client-usage-stats
+wire_runtime dsh-task-notify
 
 # ---- ensure patch rows (idempotent, YAML-indent-safe) ----
 DSH_PLUGINS_HOME="$DSH_HOME" PLUGINS_DIR="$PLUGINS_DIR" PATCH_FILE="$PATCH_FILE" python3 <<'PY'
@@ -154,6 +156,10 @@ rows = [
     ("dsh-client-usage-stats", [
         "  - id: dsh-client-usage-stats",
         "    name: '@local/dsh-client-usage-stats'",
+    ]),
+    ("dsh-task-notify", [
+        "  - id: dsh-task-notify",
+        "    name: '@local/dsh-task-notify'",
     ]),
 ]
 
