@@ -33,5 +33,8 @@ The browser half (`lib/client.js`) is hand-written plain JS and needs no build.
 
 ## Notes
 
-- The repo path is hardcoded to `/Users/lihu/git/deepseek-harness` in `src/index.ts`; adjust it if your checkout lives elsewhere.
+- The harness checkout path is read from `$DSH_REPO` (falling back to the
+  process working directory), so the plugin carries no machine-specific path.
+  Export `DSH_REPO` in your launchd env (the dsh-plugins `env.sh` does) or run
+  dsh from its checkout.
 - Version and build date are read live on each page open, so they always reflect the currently running build.

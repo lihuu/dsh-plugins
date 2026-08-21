@@ -42,8 +42,14 @@ interface ShellLike {
   run(spec: unknown): Promise<{ stdout: { text: string } }>
 }
 
-/** Absolute path of the harness source checkout this deployment runs from. */
-const REPO = '/Users/lihu/git/deepseek-harness'
+/**
+ * Harness source checkout this deployment runs from. Read from `$DSH_REPO`
+ * (the launchd env.sh exports it) so the plugin carries no machine-specific
+ * path; falls back to the process working directory, which is the repo root
+ * when dsh is launched from its checkout. A wrong value degrades to 'unknown'
+ * via the try/catch below.
+ */
+const REPO = process.env.DSH_REPO ?? process.cwd()
 
 /**
  * About info remote service. Registered under `aboutInfo`; the `get` method is
