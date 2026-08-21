@@ -29,9 +29,18 @@ cd dsh-plugins
 `install.sh` 会:
 
 - 把每个插件符号链接到 `$DSH_HOME/plugins/<name>`
-- 保证 `$DSH_HOME/cordis.patch.yml` 里有对应挂载行(幂等,不重复)
+- 保证 patch 文件里有对应挂载行(幂等,不重复)
 - 为每个插件补齐**运行期解析所需的两个软链**(见下)
 - 插件源码的改动在符号链接下即时生效
+
+挂载目标(二选一):
+
+```sh
+./install.sh                 # 全局:行写入 $DSH_HOME/cordis.patch.yml → 所有 profile 生效
+./install.sh --profile web   # 单 profile:行写入 $DSH_HOME/profiles/web/cordis.patch.yml → 仅该 profile
+```
+
+源码软链(上面几步)是共享的机器级基础设施,两种模式都一样;只有挂载行写入位置不同。
 
 ### 运行期解析软链(重要)
 

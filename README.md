@@ -28,9 +28,19 @@ cd dsh-plugins
 
 `install.sh`:
 - symlinks each plugin into `$DSH_HOME/plugins/<name>`
-- ensures the matching rows exist in `$DSH_HOME/cordis.patch.yml` (idempotent — no duplicates)
+- ensures the matching rows exist in the patch file (idempotent — no duplicates)
 - wires the two runtime resolution links every `@local` plugin needs (below)
 - source edits under the symlink take effect immediately
+
+Patch target (choose one):
+
+```sh
+./install.sh                 # global: rows in $DSH_HOME/cordis.patch.yml → ALL profiles
+./install.sh --profile web   # per-profile: rows in $DSH_HOME/profiles/web/cordis.patch.yml → that profile only
+```
+
+The source links (steps above) are shared machine infrastructure either way;
+only the patch row target changes.
 
 ### Runtime resolution links (important)
 

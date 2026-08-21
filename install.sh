@@ -12,18 +12,53 @@
 #          plugin's imports of @deepseek-ai/* and eventsource-parser resolve
 #          without any npm install. Both links are machine-local and gitignored.
 #   3. guarantees the matching rows live inside the first '- insert:' block of
-#      $DSH_HOME/cordis.patch.yml (idempotent).
+#      the patch file (idempotent).
+#
+# Patch target:
+#   default            → $DSH_HOME/cordis.patch.yml (home-level, ALL profiles)
+#   --profile <name>   → $DSH_HOME/profiles/<name>/cordis.patch.yml (that
+#                        profile only). The source links in steps 1-2 are
+#                        shared machine infrastructure either way.
+#
 # After running, restart dsh-web for host-half plugins to take effect.
 #
-# Usage: ./install.sh
+# Usage: ./install.sh [--profile <name>]
 
 set -eu
 
 DSH_HOME="${DSH_HOME:-$HOME/.dsh}"
 PLUGINS_DIR="$DSH_HOME/plugins"
-PATCH_FILE="$DSH_HOME/cordis.patch.yml"
 PROFILE_MODULES="$DSH_HOME/profiles/node_modules"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+
+# ---- parse args: --profile <name> selects the patch target ----
+PROFILE_NAME=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --profile)
+      [ "$#" -ge 2 ] || { echo "error: --profile needs a name" >&2; exit 2; }
+      PROFILE_NAME="$2"
+      shift 2
+      ;;
+    *)
+      echo "error: unknown argument: $1 (usage: ./install.sh [--profile <name>])" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [ -n "$PROFILE_NAME" ]; then
+  PATCH_FILE="$DSH_HOME/profiles/$PROFILE_NAME/cordis.patch.yml"
+  mkdir -p "$(dirname "$PATCH_FILE")"
+  if [ ! -e "$PATCH_FILE" ]; then
+    printf '# Your patch layer for this dsh profile, applied after every bundle layer.\n[]\n' > "$PATCH_FILE"
+    echo "created profile patch: $PATCH_FILE"
+  fi
+  echo "patch target: profile '$PROFILE_NAME' ($PATCH_FILE)"
+else
+  PATCH_FILE="$DSH_HOME/cordis.patch.yml"
+  echo "patch target: global (home-level, all profiles)"
+fi
 
 mkdir -p "$PLUGINS_DIR"
 
@@ -132,9 +167,16 @@ for row_id, body in rows:
     row_block = "\n".join(body)
 
     if not has_insert:
-        # no insert block yet — append a top-level one
-        sep = "" if text == "" else "\n\n"
-        text += f"{sep}# Managed by dsh-plugins install.sh\n- insert:\n{row_block}\n"
+        # no insert block yet — replace the empty-array template (`[]`) if
+        # present, otherwise append a top-level one. Appending after `[]` would
+        # produce two root nodes in one YAML document, which the loader rejects.
+        block = f"# Managed by dsh-plugins install.sh\n- insert:\n{row_block}\n"
+        empty_array = re.search(r"^[ \t]*\[\][ \t]*$", text, re.M)
+        if empty_array is not None:
+            text = text[:empty_array.start()] + block + text[empty_array.end():]
+        else:
+            sep = "" if text == "" else "\n\n"
+            text += f"{sep}{block}"
         has_insert = True
         print(f"patch added (new block): {row_id}")
         continue
