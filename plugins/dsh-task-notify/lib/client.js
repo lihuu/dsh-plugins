@@ -48,6 +48,33 @@
     return rm > 0 ? h + ' 小时 ' + rm + ' 分' : h + ' 小时'
   }
 
+  /** Compact token count: 517 / 12.5K / 1.2M. */
+  function formatTokens(n) {
+    if (n < 1000) return String(n)
+    if (n < 1000000) return (Math.round(n / 100) / 10) + 'K'
+    return (Math.round(n / 100000) / 10) + 'M'
+  }
+
+  /** Sum the four disjoint usage buckets of a tokenUsage projection value. */
+  function totalTokens(usage) {
+    if (usage === undefined || usage === null) return undefined
+    return usage.uncachedInputTokens + usage.cacheReadTokens
+      + usage.cacheWriteTokens + usage.outputTokens
+  }
+
+  /**
+   * Sanitize a session title for the notification: a title that looks like a
+   * URL or host (e.g. a session whose title is the current origin) reads as
+   * noise, so it is replaced with the product name.
+   */
+  function displayTitleOf(title, id) {
+    if (title === undefined || title === '') return id
+    if (/^(https?:\/\/|localhost|127\.0\.0\.1|[\w-]+\.\w{2,})(:\d+)?(\/|$)/i.test(title)) {
+      return 'DSH'
+    }
+    return title
+  }
+
   /** Fire one notification, requesting permission on first use (Chrome promise API). */
   function notify(title, body) {
     if (typeof Notification === 'undefined') return
@@ -74,14 +101,56 @@
     factory: function (require) {
       return {
         name: PLUGIN_ID,
-        inject: ['sessions'],
+        inject: ['sessions', 'connection'],
         apply: function (ctx) {
           var sessions = ctx.get('sessions')
+          var connection = ctx.get('connection')
           if (sessions === undefined || sessions.list === undefined) return
-          // Last-observed running bit + run start time per session; the
-          // true→false edge here fires the notification (mirrors the sidebar
-          // completion dot), with the run duration in the body.
+          // Last-observed running bit + run start time + pre-run token
+          // baseline per session; the true→false edge here fires the
+          // notification (mirrors the sidebar completion dot), with the run
+          // duration and this run's token usage in the body.
           var prevRunning = new Map()
+
+          // Read the session's tokenUsage via RPC. The host folds the durable
+          // log (live watermark or cold restore), so this works for sessions
+          // whose projection values are absent from the list snapshot.
+          function readUsage(sessionId, callback) {
+            if (connection === undefined || connection.api === undefined
+              || connection.api.sessions === undefined) {
+              callback(undefined)
+              return
+            }
+            connection.api.sessions.history({ sessionId: sessionId, maxMessages: 1 }).then(
+              function (res) {
+                var block = res && res.value && res.value.projections
+                var usage = block && block.values && block.values.tokenUsage
+                callback(totalTokens(usage))
+              },
+              function () { callback(undefined) }
+            )
+          }
+
+          function fireCompletion(id, title, runStart, runBaseline, tokens) {
+            var parts = ['耗时 ' + formatDuration(Date.now() - runStart)]
+            var used = tokens !== undefined
+              ? (runBaseline !== undefined ? tokens - runBaseline : tokens)
+              : undefined
+            if (used !== undefined && used > 0) {
+              parts.push('本次约 ' + formatTokens(used) + ' tokens')
+              notify(TITLE_PREFIX + title, parts.join(' · '))
+              return
+            }
+            // tokenUsage not in the list snapshot yet: read it via RPC.
+            readUsage(id, function (tokens2) {
+              var used2 = tokens2 !== undefined
+                ? (runBaseline !== undefined ? tokens2 - runBaseline : tokens2)
+                : undefined
+              var parts2 = ['耗时 ' + formatDuration(Date.now() - runStart)]
+              if (used2 !== undefined && used2 > 0) parts2.push('本次约 ' + formatTokens(used2) + ' tokens')
+              notify(TITLE_PREFIX + title, parts2.join(' · '))
+            })
+          }
 
           var unsubscribe = sessions.list.subscribe(function () {
             if (!isEnabled()) return
@@ -95,19 +164,20 @@
               if (row === undefined) continue
               var running = row.running
               var was = prevRunning.get(id)
+              var tokens = totalTokens(row.projectionValues && row.projectionValues.tokenUsage)
               if (was !== undefined && was.running === true && running === false) {
-                var title = (row.displayTitle && row.displayTitle !== '') ? row.displayTitle : id
-                var body = '耗时 ' + formatDuration(Date.now() - was.startTime)
-                notify(TITLE_PREFIX + title, body)
+                fireCompletion(id, displayTitleOf(row.displayTitle, id), was.startTime, was.baselineTokens, tokens)
               }
               if (running) {
-                // Keep the first start time of a run across repeated frames.
+                // Keep the first start time and pre-run token baseline of a
+                // run across repeated frames.
                 prevRunning.set(id, {
                   running: true,
                   startTime: was !== undefined && was.running ? was.startTime : Date.now(),
+                  baselineTokens: was !== undefined && was.running ? was.baselineTokens : tokens,
                 })
               } else {
-                prevRunning.set(id, { running: false, startTime: 0 })
+                prevRunning.set(id, { running: false, startTime: 0, baselineTokens: tokens })
               }
             }
           })
