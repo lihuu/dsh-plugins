@@ -21,8 +21,8 @@
   /** localStorage key controlling the toggle; absent means enabled. */
   var ENABLED_KEY = 'dshNotifyEnabled'
 
-  /** Notification title (fixed product copy). */
-  var TITLE = '任务已完成'
+  /** Notification title prefix (product copy); the session title is appended. */
+  var TITLE_PREFIX = '任务已完成 · '
 
   /** Whether notifications are currently enabled (read live each completion). */
   function isEnabled() {
@@ -34,11 +34,25 @@
     }
   }
 
+  /** Compact human duration: 45 秒 / 2 分 15 秒 / 1 小时 5 分. */
+  function formatDuration(ms) {
+    var s = Math.round(ms / 1000)
+    if (s < 60) return s + ' 秒'
+    var m = Math.floor(s / 60)
+    if (m < 60) {
+      var rs = s % 60
+      return rs > 0 ? m + ' 分 ' + rs + ' 秒' : m + ' 分钟'
+    }
+    var h = Math.floor(m / 60)
+    var rm = m % 60
+    return rm > 0 ? h + ' 小时 ' + rm + ' 分' : h + ' 小时'
+  }
+
   /** Fire one notification, requesting permission on first use (Chrome promise API). */
-  function notify(body) {
+  function notify(title, body) {
     if (typeof Notification === 'undefined') return
     if (Notification.permission === 'granted') {
-      new Notification(TITLE, { body: body })
+      new Notification(title, { body: body })
       return
     }
     if (Notification.permission === 'denied') return
@@ -46,11 +60,11 @@
     var request = Notification.requestPermission()
     if (request && typeof request.then === 'function') {
       request.then(function (permission) {
-        if (permission === 'granted') new Notification(TITLE, { body: body })
+        if (permission === 'granted') new Notification(title, { body: body })
       })
     } else {
       Notification.requestPermission(function (permission) {
-        if (permission === 'granted') new Notification(TITLE, { body: body })
+        if (permission === 'granted') new Notification(title, { body: body })
       })
     }
   }
@@ -64,8 +78,9 @@
         apply: function (ctx) {
           var sessions = ctx.get('sessions')
           if (sessions === undefined || sessions.list === undefined) return
-          // Last-observed running bit per session; the true→false edge here
-          // fires the notification (mirrors the sidebar completion dot).
+          // Last-observed running bit + run start time per session; the
+          // true→false edge here fires the notification (mirrors the sidebar
+          // completion dot), with the run duration in the body.
           var prevRunning = new Map()
 
           var unsubscribe = sessions.list.subscribe(function () {
@@ -80,11 +95,20 @@
               if (row === undefined) continue
               var running = row.running
               var was = prevRunning.get(id)
-              if (was === true && running === false) {
-                var body = (row.displayTitle && row.displayTitle !== '') ? row.displayTitle : id
-                notify(body)
+              if (was !== undefined && was.running === true && running === false) {
+                var title = (row.displayTitle && row.displayTitle !== '') ? row.displayTitle : id
+                var body = '耗时 ' + formatDuration(Date.now() - was.startTime)
+                notify(TITLE_PREFIX + title, body)
               }
-              prevRunning.set(id, running)
+              if (running) {
+                // Keep the first start time of a run across repeated frames.
+                prevRunning.set(id, {
+                  running: true,
+                  startTime: was !== undefined && was.running ? was.startTime : Date.now(),
+                })
+              } else {
+                prevRunning.set(id, { running: false, startTime: 0 })
+              }
             }
           })
 

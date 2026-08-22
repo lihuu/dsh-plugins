@@ -19,8 +19,9 @@ Browser-side changes appear on page refresh (or via HMR).
 
 ## Behavior
 
-- Fires a notification titled **任务已完成** with the session's display title
-  (falls back to the session id) whenever a session stops running.
+- Fires a notification titled **任务已完成 · {会话标题}** (falls back to the
+  session id) with the run duration in the body (e.g. **耗时 2 分 15 秒**)
+  whenever a session stops running.
 - Chrome-only: uses the standard `Notification` API. On first use it requests
   permission; notifications only appear once granted.
 - Notifies regardless of tab focus.
